@@ -7,7 +7,6 @@ Optional password
 """
 
 import sys
-import os
 import struct
 from PIL import Image
 import numpy as np
@@ -52,28 +51,8 @@ for ix, ival in enumerate(img_array):
             except IndexError:
                 break
 
-print("before")
-index = 0
-for ix, ival in enumerate(img_array):
-    for jx, jval in enumerate(ival):
-        for kx, _ in enumerate(jval):
-            if index < 8:
-                print(img_array[ix][jx][kx])
-                index += 1
-
 Image.fromarray(img_array).save('out.bmp')
 IMG_FILE = Image.open('out.bmp')
 img_array = np.array(IMG_FILE)
 
-print("new")
-index = 0
-for ix, ival in enumerate(img_array):
-    for jx, jval in enumerate(ival):
-        for kx, _ in enumerate(jval):
-            if index < 8:
-                print(img_array[ix][jx][kx])
-                index += 1
-
-
-
-
+print("Saved as out.bmp")

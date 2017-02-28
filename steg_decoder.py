@@ -7,7 +7,6 @@ Optional password
 """
 
 import sys
-import os
 import struct
 import itertools
 from PIL import Image
