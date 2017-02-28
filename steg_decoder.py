@@ -34,6 +34,7 @@ bit_string = itertools.islice(values, value_len)
 text_bytes = ba.bitarray(bit_string).tobytes()
 text = text_bytes.decode('utf-8')
 
+# Check for password
 if len(sys.argv) > 2:
     text ^= sys.argv[2]
 
