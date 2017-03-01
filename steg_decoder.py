@@ -14,15 +14,17 @@ import numpy as np
 import bitarray as ba
 import base64
 from Crypto.Cipher import XOR
+from Crypto.Cipher import AES
+import os
 
-def decode(key, enc):
-    dec = []
-    enc = base64.urlsafe_b64decode(enc)
-    for i in range(len(enc)):
-        key_c = key[i % len(key)]
-        dec_c = chr((256 + ord(enc[i]) - ord(key_c)) % 256)
-        dec.append(dec_c)
-    return "".join(dec)
+def decrypt(encryptedString, key):
+    PADDING = bytes('{', 'utf-8')
+    DecodeAES = lambda c, e: c.decrypt(base64.b64decode(e)).rstrip(PADDING)
+    encrypti = encryptedString
+    skey = base64.b64decode(key)
+    cipher = AES.new(skey)
+    decoded = DecodeAES(cipher, encrypti)
+    return decoded
 
 # Input
 FILE_NAME = sys.argv[1]
@@ -38,6 +40,7 @@ values = ((rgb & 1) for row in img_array for pixel in row for rgb in pixel)
 num = itertools.islice(values, 32)
 len_bytes = ba.bitarray(num).tobytes()
 value_len = struct.unpack(">I", len_bytes)[0]
+#print(value_len)
 
 # Read text
 bit_string = itertools.islice(values, value_len)
@@ -48,9 +51,6 @@ password = " "
 if len(sys.argv) > 2:
     password = sys.argv[2]
 
-text = XOR.new(password).decrypt(base64.b64decode(text_bytes)).decode("utf-8")
-#text_bytes.decode('utf-8')
+text = decrypt(text_bytes, password)
 
-print(text)
-
-
+print(text.decode("utf-8"))

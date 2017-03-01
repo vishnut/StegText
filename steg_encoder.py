@@ -12,36 +12,46 @@ from PIL import Image
 import numpy as np
 import bitarray as ba
 import base64
-#from Crypto.Cipher import AES
+from Crypto.Cipher import AES
 from Crypto.Cipher import XOR
+import os
+import itertools
 
-def encode(key, string):
-    encoded_chars = []
-    for i in range(len(string)):
-        key_c = key[i % len(key)]
-        encoded_c = chr(ord(string[i]) + ord(key_c) % 256)
-        encoded_chars.append(encoded_c)
-    encoded_string = "".join(encoded_chars)
-    return base64.urlsafe_b64encode(encoded_string)
+skey = ''
+
+def encryption(privateInfo):
+    BLOCK_SIZE = 16
+    PADDING = '{'
+    pad = lambda s: s + (BLOCK_SIZE - len(s) % BLOCK_SIZE) * PADDING
+    EncodeAES = lambda c, s: base64.b64encode(c.encrypt(pad(s)))
+    secret = os.urandom(BLOCK_SIZE)
+    global skey
+    skey = secret
+    print('encryption key:', secret)
+    cipher = AES.new(secret)
+    encoded = EncodeAES(cipher, privateInfo)
+    print('Encrypted string:', encoded)
+    token = base64.b64encode(secret).decode('utf-8')
+    print("Token: ", token)
+    return encoded
 
 # Input
 FILE_NAME = sys.argv[1]
 text = sys.argv[2]
-"""
-diff = len(text) % 16
-if diff:
-    diff = 16 - diff
-    text += diff * ' '
-"""
+
 # XOR text with password if given
 if len(sys.argv) > 3:
-    text = base64.b64encode(XOR.new(sys.argv[3]).encrypt(text))
+    #text = base64.b64encode(XOR.new(sys.argv[3]).encrypt(text))
+    text = encryption(text)
     print(str(text))
 else:
-    text = base64.b64encode(XOR.new(" ").encrypt(text))
+    #text = base64.b64encode(XOR.new(" ").encrypt(text))
+    text = encryption(text)
     print(str(text))
     #sys.argv[3]
     #text = obj.encrypt(text)
+
+#print("DECODED", decryption(text))
 
 # Read in image
 IMG_FILE = Image.open(FILE_NAME)
@@ -54,12 +64,13 @@ text_bytes.frombytes(text)
 
 # Text length to bitstring
 str_len = len(text_bytes)
+print(str_len)
 len_bytes = ba.bitarray()
 len_bytes.frombytes(struct.pack(">I", str_len))
+print(len_bytes)
 
 out_bitstring = list(len_bytes)
 out_bitstring.extend(text_bytes)
-print(out_bitstring)
 
 index = 0
 for ix, ival in enumerate(img_array):
@@ -70,14 +81,10 @@ for ix, ival in enumerate(img_array):
                     img_array[ix][jx][kx] |= 1
                 else:
                     img_array[ix][jx][kx] &= ~1
-                print(out_bitstring[index], img_array[ix][jx][kx])
                 index += 1
             except IndexError:
                 break
 
 Image.fromarray(img_array).save('out.bmp')
-IMG_FILE = Image.open('out.bmp')
-img_array = np.array(IMG_FILE)
 
 print("Saved as out.bmp")
-
