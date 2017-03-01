@@ -12,6 +12,17 @@ import itertools
 from PIL import Image
 import numpy as np
 import bitarray as ba
+import base64
+from Crypto.Cipher import XOR
+
+def decode(key, enc):
+    dec = []
+    enc = base64.urlsafe_b64decode(enc)
+    for i in range(len(enc)):
+        key_c = key[i % len(key)]
+        dec_c = chr((256 + ord(enc[i]) - ord(key_c)) % 256)
+        dec.append(dec_c)
+    return "".join(dec)
 
 # Input
 FILE_NAME = sys.argv[1]
@@ -31,10 +42,15 @@ value_len = struct.unpack(">I", len_bytes)[0]
 # Read text
 bit_string = itertools.islice(values, value_len)
 text_bytes = ba.bitarray(bit_string).tobytes()
-text = text_bytes.decode('utf-8')
 
+password = " "
 # Check for password
 if len(sys.argv) > 2:
-    text ^= sys.argv[2]
+    password = sys.argv[2]
+
+text = XOR.new(password).decrypt(base64.b64decode(text_bytes)).decode("utf-8")
+#text_bytes.decode('utf-8')
 
 print(text)
+
+
